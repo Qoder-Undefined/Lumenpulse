@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Query, Param, Body, Headers } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Query,
+  Param,
+  Body,
+  Headers,
+} from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import {
   CreatePaymentLinkDto,
@@ -7,7 +15,6 @@ import {
 } from './dto/payment-link.dto';
 import {
   CreatePaymentTransactionDto,
-  PaymentTransactionResponseDto,
   ListTransactionsQueryDto,
 } from './dto/payment-transaction.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -52,7 +59,11 @@ export class PaymentsController {
     @Headers('x-organization-id') organizationId: string,
     @Headers('idempotency-key') idempotencyKey: string,
   ): Promise<any> {
-    return this.paymentsService.createTransaction(organizationId, idempotencyKey, dto);
+    return this.paymentsService.createTransaction(
+      organizationId,
+      idempotencyKey,
+      dto,
+    );
   }
 
   @Get('transactions')

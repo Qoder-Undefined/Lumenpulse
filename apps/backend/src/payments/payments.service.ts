@@ -1,11 +1,27 @@
-import { Injectable, Logger, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PaymentLink, PaymentLinkStatus } from './entities/payment-link.entity';
 import { IdempotencyKey } from './entities/idempotency-key.entity';
-import { PaymentTransaction, PaymentTransactionStatus } from './entities/payment-transaction.entity';
-import { CreatePaymentLinkDto, PaymentLinkResponseDto, ListPaymentLinksQueryDto } from './dto/payment-link.dto';
-import { CreatePaymentTransactionDto, PaymentTransactionResponseDto } from './dto/payment-transaction.dto';
+import {
+  PaymentTransaction,
+  PaymentTransactionStatus,
+} from './entities/payment-transaction.entity';
+import {
+  CreatePaymentLinkDto,
+  PaymentLinkResponseDto,
+  ListPaymentLinksQueryDto,
+} from './dto/payment-link.dto';
+import {
+  CreatePaymentTransactionDto,
+  PaymentTransactionResponseDto,
+} from './dto/payment-transaction.dto';
 
 @Injectable()
 export class PaymentsService {
@@ -37,11 +53,16 @@ export class PaymentsService {
       expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
     });
     await this.paymentLinksRepo.save(link);
-    this.logger.log(`Created payment link ${dto.linkId} for org ${organizationId}`);
+    this.logger.log(
+      `Created payment link ${dto.linkId} for org ${organizationId}`,
+    );
     return this.toResponseDto(link);
   }
 
-  async getPaymentLink(organizationId: string, linkId: string): Promise<PaymentLinkResponseDto> {
+  async getPaymentLink(
+    organizationId: string,
+    linkId: string,
+  ): Promise<PaymentLinkResponseDto> {
     const link = await this.paymentLinksRepo.findOne({
       where: { organizationId, linkId } as any,
     });
@@ -83,7 +104,9 @@ export class PaymentsService {
         where: { id: existingKey.id } as any,
       });
       if (existingTx) {
-        this.logger.log(`Returning cached transaction for idempotency key ${idempotencyKey}`);
+        this.logger.log(
+          `Returning cached transaction for idempotency key ${idempotencyKey}`,
+        );
         return this.toTransactionResponseDto(existingTx);
       }
     }
@@ -122,25 +145,34 @@ export class PaymentsService {
     });
     await this.idempotencyKeysRepo.save(key);
 
-    this.logger.log(`Created transaction ${txHash} for link ${dto.paymentLinkId}`);
+    this.logger.log(
+      `Created transaction ${txHash} for link ${dto.paymentLinkId}`,
+    );
     return this.toTransactionResponseDto(savedTx);
   }
 
   async listTransactions(
     organizationId: string,
-    query: { paymentLinkId?: string; status?: PaymentTransactionStatus; senderPublicKey?: string; limit?: number; offset?: number },
+    query: {
+      paymentLinkId?: string;
+      status?: PaymentTransactionStatus;
+      senderPublicKey?: string;
+      limit?: number;
+      offset?: number;
+    },
   ): Promise<{ transactions: PaymentTransactionResponseDto[]; total: number }> {
     const where: any = { organizationId };
     if (query.paymentLinkId) where.paymentLinkId = query.paymentLinkId;
     if (query.status) where.status = query.status;
     if (query.senderPublicKey) where.senderPublicKey = query.senderPublicKey;
 
-    const [transactions, total] = await this.paymentTransactionsRepo.findAndCount({
-      where,
-      order: { createdAt: 'DESC' },
-      skip: query.offset || 0,
-      take: query.limit || 50,
-    });
+    const [transactions, total] =
+      await this.paymentTransactionsRepo.findAndCount({
+        where,
+        order: { createdAt: 'DESC' },
+        skip: query.offset || 0,
+        take: query.limit || 50,
+      });
 
     return {
       transactions: transactions.map((t) => this.toTransactionResponseDto(t)),
@@ -148,7 +180,10 @@ export class PaymentsService {
     };
   }
 
-  async getTransaction(organizationId: string, transactionHash: string): Promise<PaymentTransactionResponseDto> {
+  async getTransaction(
+    organizationId: string,
+    transactionHash: string,
+  ): Promise<PaymentTransactionResponseDto> {
     const tx = await this.paymentTransactionsRepo.findOne({
       where: { organizationId, transactionHash } as any,
     });
@@ -177,7 +212,9 @@ export class PaymentsService {
     };
   }
 
-  private toTransactionResponseDto(tx: PaymentTransaction): PaymentTransactionResponseDto {
+  private toTransactionResponseDto(
+    tx: PaymentTransaction,
+  ): PaymentTransactionResponseDto {
     return {
       id: tx.id,
       paymentLinkId: tx.paymentLinkId,
